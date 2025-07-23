@@ -19,10 +19,13 @@ import JoinRoomScreen from './components/JoinRoomScreen';
 import RoomScreen from './components/RoomScreen';
 import ErrorBanner from './components/ErrorBanner';
 import LoadingOverlay from './components/LoadingOverlay';
+import { config } from './config';
 
 type AppScreen = 'welcome' | 'create' | 'join' | 'room';
 
 const App = () => {
+  const { app } = config;
+
   const [name, setName] = useState<string>('');
   const [roomKey, setRoomKey] = useState<string>('');
   const [screen, setScreen] = useState<AppScreen>('welcome');
@@ -69,7 +72,7 @@ const App = () => {
     if (screen !== 'welcome') return;
     if (!name) return;
     didAttemptRestore.current = true;
-    const savedRoomKey = localStorage.getItem('starterjam_roomKey');
+    const savedRoomKey = localStorage.getItem(`${app.key}_roomKey`);
     if (savedRoomKey) {
       setIsLoading(true);
       joinRoom(name, savedRoomKey)
@@ -82,7 +85,7 @@ const App = () => {
           const errorMessage =
             err instanceof Error ? err.message : 'Failed to reconnect to room';
           setError(errorMessage);
-          localStorage.removeItem('starterjam_roomKey');
+          localStorage.removeItem(`${app.key}_roomKey`);
         })
         .finally(() => setIsLoading(false));
     }
@@ -126,7 +129,7 @@ const App = () => {
   // Persist user name in localStorage (Combined Load & Save)
   useEffect(() => {
     if (!didLoadName.current) {
-      const savedName = localStorage.getItem('starterjam_username');
+      const savedName = localStorage.getItem(`${app.key}_username`);
       if (savedName) {
         setName(savedName);
       }
@@ -134,12 +137,12 @@ const App = () => {
       return;
     }
 
-    if (name === '' && !localStorage.getItem('starterjam_username')) {
+    if (name === '' && !localStorage.getItem(`${app.key}_username`)) {
       return;
     }
 
     const saveTimeout = setTimeout(() => {
-      localStorage.setItem('starterjam_username', name);
+      localStorage.setItem(`${app.key}_username`, name);
     }, 500);
 
     return () => clearTimeout(saveTimeout);
@@ -155,7 +158,7 @@ const App = () => {
       const newRoom = await createRoom(name);
 
       setRoomData(newRoom);
-      localStorage.setItem('starterjam_roomKey', newRoom.key);
+      localStorage.setItem(`${app.key}_roomKey`, newRoom.key);
       setIsModeratorView(true);
       setScreen('room');
     } catch (err: unknown) {
@@ -177,7 +180,7 @@ const App = () => {
       const joinedRoom = await joinRoom(name, roomKey);
 
       setRoomData(joinedRoom);
-      localStorage.setItem('starterjam_roomKey', joinedRoom.key);
+      localStorage.setItem(`${app.key}_roomKey`, joinedRoom.key);
       setIsModeratorView(joinedRoom.moderator === name);
       setScreen('room');
     } catch (err: unknown) {
@@ -203,7 +206,7 @@ const App = () => {
 
   const handleLeaveRoom = () => {
     disconnectFromRoom();
-    localStorage.removeItem('starterjam_roomKey');
+    localStorage.removeItem(`${app.key}_roomKey`);
     setRoomData({
       key: '',
       users: [],

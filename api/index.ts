@@ -1,16 +1,12 @@
 import type {
-  DurableObjectNamespace,
   ExportedHandler,
-  Fetcher,
   Request as CfRequest,
   Response as CfResponse,
 } from '@cloudflare/workers-types';
-import { Room } from './room';
 
-export interface Env {
-  ROOM: DurableObjectNamespace;
-  ASSETS: Fetcher;
-}
+import { Room } from './room';
+import type { Env } from './types';
+import { createApiConfig } from './config';
 
 async function handleRequest(
   request: CfRequest,
@@ -63,6 +59,7 @@ async function handleApiRequest(
   request: CfRequest,
   env: Env
 ): Promise<CfResponse> {
+  const config = createApiConfig(env);
   const path = url.pathname.substring(5); // Remove '/api/'
 
   // Create a new room
@@ -77,7 +74,7 @@ async function handleApiRequest(
       }) as unknown as CfResponse;
     }
 
-    const roomKey = generateRoomKey();
+    const roomKey = generateRoomKey(config.room.keyLength);
     const roomId = getRoomId(roomKey);
 
     if (!env.ROOM) {
@@ -89,7 +86,7 @@ async function handleApiRequest(
     const roomObject = env.ROOM.get(env.ROOM.idFromName(roomId));
 
     const response = await roomObject.fetch(
-      new Request('https://dummy/initialize', {
+      new Request(`${config.api.dummyBaseUrl}/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ roomKey, moderator: name }),
@@ -125,7 +122,7 @@ async function handleApiRequest(
     const roomObject = env.ROOM.get(env.ROOM.idFromName(roomId));
 
     const response = await roomObject.fetch(
-      new Request('https://dummy/join', {
+      new Request(`${config.api.dummyBaseUrl}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
@@ -163,7 +160,7 @@ async function handleApiRequest(
     const roomObject = env.ROOM.get(env.ROOM.idFromName(roomId));
 
     return roomObject.fetch(
-      new Request('https://dummy/settings', {
+      new Request(`${config.api.dummyBaseUrl}/settings`, {
         method: 'GET',
       }) as unknown as CfRequest
     );
@@ -201,7 +198,7 @@ async function handleApiRequest(
     const roomObject = env.ROOM.get(env.ROOM.idFromName(roomId));
 
     return roomObject.fetch(
-      new Request('https://dummy/settings', {
+      new Request(`${config.api.dummyBaseUrl}/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, settings }),
@@ -215,8 +212,8 @@ async function handleApiRequest(
   }) as unknown as CfResponse;
 }
 
-function generateRoomKey() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+function generateRoomKey(keyLength: number = 6) {
+  return Math.random().toString(36).substring(2, 2 + keyLength).toUpperCase();
 }
 
 function getRoomId(roomKey: string) {

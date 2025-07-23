@@ -1,5 +1,6 @@
 import { type FC, useState, useEffect } from 'react';
 
+import { config } from '../config';
 import type { RoomData } from '../types';
 import ConnectionStatus from './ConnectionStatus';
 import ErrorBanner from './ErrorBanner';
@@ -27,6 +28,7 @@ const RoomScreen: FC<RoomScreenProps> = ({
   isConnected,
   onLeaveRoom,
 }) => {
+  const { app } = config;
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
@@ -41,7 +43,7 @@ const RoomScreen: FC<RoomScreenProps> = ({
       <header className="p-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 md:space-x-4">
-            <h1 className="text-lg md:text-xl font-bold">StarterJam</h1>
+            <h1 className="text-lg md:text-xl font-bold">{app.name}</h1>
             <div className="flex items-stretch h-7">
               <div className="px-2 md:px-3 py-1 text-xs md:text-sm bg-teal-800 rounded-l-md truncate max-w-[80px] md:max-w-none flex items-center">
                 {roomData.key}

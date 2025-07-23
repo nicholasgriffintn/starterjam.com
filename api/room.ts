@@ -7,7 +7,8 @@ import type {
   WebSocket,
   Response as CfResponse,
 } from '@cloudflare/workers-types';
-import type { Env } from './index';
+import type { Env } from './types';
+import { createApiConfig } from './config';
 
 interface RoomData {
   key: string;
@@ -32,11 +33,13 @@ export class Room {
   state: DurableObjectState;
   env: Env;
   sessions: Map<WebSocket, SessionInfo>;
+  config: ReturnType<typeof createApiConfig>;
 
   constructor(state: DurableObjectState, env: Env) {
     this.state = state;
     this.env = env;
     this.sessions = new Map();
+    this.config = createApiConfig(env);
 
     this.state.blockConcurrencyWhile(async () => {
       let roomData = await this.state.storage.get<RoomData>('roomData');
@@ -84,6 +87,7 @@ export class Room {
 
       await this.handleSession(server, roomKey, userName);
 
+      // @ts-ignore
       return new Response(null, {
         status: 101,
         webSocket: client,
@@ -157,6 +161,12 @@ export class Room {
         }
 
         if (!roomData.users.includes(name)) {
+          if (roomData.users.length >= this.config.room.maxUsersPerRoom) {
+            return new Response(JSON.stringify({ error: 'Room is full' }), {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            }) as unknown as CfResponse;
+          }
           roomData.users.push(name);
         }
 
@@ -275,6 +285,16 @@ export class Room {
         }
 
         if (!roomData.users.includes(userName)) {
+          if (roomData.users.length >= this.config.room.maxUsersPerRoom) {
+            webSocket.send(
+              JSON.stringify({
+                type: 'error',
+                error: 'Room is full',
+              })
+            );
+            webSocket.close();
+            return;
+          }
           roomData.users.push(userName);
         }
 

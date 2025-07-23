@@ -1,5 +1,7 @@
 import type { FC } from 'react';
 
+import { config } from '../config';
+
 interface WelcomeScreenProps {
   onCreateRoom: () => void;
   onJoinRoom: () => void;
@@ -9,10 +11,12 @@ const WelcomeScreen: FC<WelcomeScreenProps> = ({
   onCreateRoom,
   onJoinRoom,
 }) => {
+  const { app } = config;
+
   return (
     <div className="flex flex-col items-center justify-center p-8 space-y-6">
       <h1 className="text-3xl font-bold text-blue-600">
-        Welcome to StarterJam
+        Welcome to {app.name}
       </h1>
       <p className="text-gray-600">
         A starter template for collaborative applications.
@@ -35,10 +39,7 @@ const WelcomeScreen: FC<WelcomeScreenProps> = ({
         </button>
 
         <p className="mt-4 text-gray-600">
-          <a
-            href="https://github.com/nicholasgriffintn/starterjam.com"
-            className="text-blue-500 hover:underline"
-          >
+          <a href={app.githubRepo} className="text-blue-500 hover:underline">
             View the source code on GitHub
           </a>
         </p>

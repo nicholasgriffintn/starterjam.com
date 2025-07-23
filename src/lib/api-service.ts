@@ -1,18 +1,10 @@
 import type { RoomData, RoomSettings } from '../types';
+import { config } from '../config';
 
-const API_BASE_URL = import.meta.env.DEV
-  ? 'http://localhost:5173/api'
-  : 'https://starterjam.com/api';
-
-const WS_BASE_URL = import.meta.env.DEV
-  ? 'ws://localhost:5173/ws'
-  : 'wss://starterjam.com/ws';
+const { api, websocket } = config;
 
 let activeSocket: WebSocket | null = null;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
-const RECONNECT_BASE_DELAY = 1000;
-const MAX_RECONNECT_DELAY = 30000;
 const eventListeners: Record<string, ((data: WebSocketMessage) => void)[]> = {};
 
 export type WebSocketMessageType =
@@ -39,7 +31,7 @@ interface WebSocketMessage {
  */
 export async function createRoom(name: string): Promise<RoomData> {
   try {
-    const response = await fetch(`${API_BASE_URL}/rooms`, {
+    const response = await fetch(`${api.baseUrl}/rooms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +65,7 @@ export async function joinRoom(
   roomKey: string
 ): Promise<RoomData> {
   try {
-    const response = await fetch(`${API_BASE_URL}/rooms/join`, {
+    const response = await fetch(`${api.baseUrl}/rooms/join`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -116,7 +108,7 @@ export function connectToRoom(
 
   try {
     const socket = new WebSocket(
-      `${WS_BASE_URL}?room=${encodeURIComponent(
+      `${api.wsBaseUrl}?room=${encodeURIComponent(
         roomKey
       )}&name=${encodeURIComponent(name)}`
     );
@@ -195,19 +187,19 @@ function handleReconnect(
   name: string,
   onRoomUpdate: (data: RoomData) => void
 ): void {
-  if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+  if (reconnectAttempts < websocket.maxReconnectAttempts) {
     reconnectAttempts++;
 
     const jitter = Math.random() * 0.3 + 0.85; // Random value between 0.85 and 1.15
     const delay = Math.min(
-      RECONNECT_BASE_DELAY * 2 ** reconnectAttempts * jitter,
-      MAX_RECONNECT_DELAY
+      websocket.reconnectBaseDelay * 2 ** reconnectAttempts * jitter,
+      websocket.maxReconnectDelay
     );
 
     console.log(
       `Attempting to reconnect in ${Math.round(
         delay
-      )}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`
+      )}ms (attempt ${reconnectAttempts}/${websocket.maxReconnectAttempts})`
     );
 
     setTimeout(() => {
@@ -305,7 +297,7 @@ export function getConnectionState(): number | null {
 export async function getRoomSettings(roomKey: string): Promise<RoomSettings> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/rooms/settings?roomKey=${encodeURIComponent(roomKey)}`,
+      `${api.baseUrl}/rooms/settings?roomKey=${encodeURIComponent(roomKey)}`,
       {
         method: 'GET',
         headers: {
@@ -342,7 +334,7 @@ export async function updateRoomSettings(
   settings: Partial<RoomSettings>
 ): Promise<RoomSettings> {
   try {
-    const response = await fetch(`${API_BASE_URL}/rooms/settings`, {
+    const response = await fetch(`${api.baseUrl}/rooms/settings`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
