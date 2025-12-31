@@ -5,9 +5,12 @@ A simple starter template for collaborative applications with Durable Objects fr
 ## Quick Start
 
 1. **Setup your project:**
-   Update the wrangler.json file with your vars and details for your app.
-
-   Copy .env.example to .env and update the values as needed.
+   ```bash
+   npm run setup
+   # or
+   pnpm run setup
+   ```
+   This interactive script will configure your environment variables and create the necessary `.env` files.
 
 2. **Install dependencies:**
    ```bash
@@ -36,6 +39,9 @@ The application uses environment variables for configuration. The setup script w
 - `VITE_APP_NAME` - Application name (used for branding)
 - `VITE_GITHUB_REPO` - URL of the GitHub repository for the project
 - `VITE_ENVIRONMENT` - Environment identifier (development/staging/production)
+- `VITE_MAX_RECONNECT_ATTEMPTS` - Maximum WebSocket reconnection attempts
+- `VITE_RECONNECT_BASE_DELAY` - Base delay between reconnections (ms)
+- `VITE_MAX_RECONNECT_DELAY` - Maximum delay between reconnections (ms)
 
 ### Environment Files
 
@@ -45,6 +51,14 @@ The application uses environment variables for configuration. The setup script w
 - `.env.local.example` - Template for local development
 
 **Note:** Remember to add `.env` and `.env.local` to your `.gitignore` file to keep your configuration secure.
+
+## Manual Configuration
+
+If you prefer to configure manually without the setup script:
+
+1. Copy `.env.example` to `.env` and update the values
+2. For local development, copy `.env.local.example` to `.env.local`
+3. Customize the environment variables according to your needs
 
 ## Customization
 
