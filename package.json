@@ -8,8 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && npm exec wrangler deploy",
-    "setup": "node scripts/setup.js"
+    "deploy": "npm run build && npm exec wrangler deploy"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.16",
